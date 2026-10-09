@@ -1,12 +1,112 @@
 <!doctype html>
 <html lang="pt-BR">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Calculadora de Impressão 3D</title>
-<style>body{font:16px Arial;background:#f4f7fb;margin:25px;color:#172033}main{max-width:900px;margin:auto}.box{background:white;padding:18px;margin:12px 0;border-radius:12px}.grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}label{display:block;margin:8px 0 4px;font-weight:bold}input,select{width:100%;padding:9px;box-sizing:border-box;border:1px solid #bbb;border-radius:6px}button{padding:12px 20px;background:#2563eb;color:white;border:0;border-radius:7px;font-weight:bold}.result{font-size:20px;font-weight:bold}@media(max-width:650px){.grid{grid-template-columns:1fr}}</style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="theme-color" content="#17202a" />
+  <title>Oficina 3D | Calculadora de preço</title>
+  <link rel="stylesheet" href="style.css?v=24" />
 </head>
-<body><main><h1>Calculadora de lucro na impressão 3D</h1>
-<div class="box"><h2>Produção e venda</h2><div class="grid"><div><label>Horas de impressão</label><input id="h" type="number" value="5" step="0.01"></div><div><label>Peças por mesa</label><input id="q" type="number" value="4"></div><div><label>Preço atual por peça (R$)</label><input id="p" type="number" value="29.90" step="0.01"></div><div><label>Canal</label><select id="channel"><option value="0">Site próprio</option><option value="20">Shopee</option><option value="17">Mercado Livre</option></select></div><div><label>Taxa do canal (%) editável</label><input id="fee" type="number" value="0" step="0.01"></div><div><label>Margem desejada (%)</label><input id="margin" type="number" value="30" step="0.01"></div></div></div>
-<div class="box"><h2>Custos da mesa/ciclo</h2><div class="grid"><div><label>Filamento total usado (g)</label><input id="g" type="number" value="160" step="0.1"></div><div><label>Preço do filamento (R$/kg)</label><input id="kg" type="number" value="95" step="0.01"></div><div><label>Embalagem total (R$)</label><input id="pack" type="number" value="6" step="0.01"></div><div><label>Outros custos totais (R$)</label><input id="other" type="number" value="0" step="0.01"></div><div><label>Mão de obra por peça (R$)</label><input id="labor" type="number" value="2" step="0.01"></div><div><label>Bambu Lab A1 — potência média (W)</label><input id="w" type="number" value="120"></div><div><label>Energia (R$/kWh)</label><input id="kwh" type="number" value="0.95" step="0.01"></div><div><label>Máquina/manutenção por hora (R$)</label><input id="machine" type="number" value="2" step="0.01"></div></div></div>
-<div class="box"><button id="go">Calcular</button><h2>Resultado</h2><p>Preço mínimo sem prejuízo: <span class="result" id="min">—</span></p><p>Preço ideal com margem: <span class="result" id="ideal">—</span></p><p>Lucro por peça no preço atual: <span class="result" id="profit">—</span></p><p>Lucro por hora no preço atual: <span class="result" id="hour">—</span></p></div></main>
-<script>const $=id=>document.getElementById(id),n=id=>Number($(id).value)||0,money=v=>v.toLocaleString('pt-BR',{style:'currency',currency:'BRL'});function calc(){let q=n('q'),h=n('h'),fee=n('fee')/100,material=n('g')/1000*n('kg'),energy=n('w')/1000*n('kwh')*h,machine=n('machine')*h,base=(material+n('pack')+n('other')+(n('labor')*q)+energy+machine)/q,min=base/(1-fee),ideal=base/(1-fee-n('margin')/100),profit=n('p')*(1-fee)-base,hour=profit*q/h;$('min').textContent=money(min);$('ideal').textContent=money(ideal);$('profit').textContent=money(profit);$('hour').textContent=money(hour)}$('channel').onchange=()=>{$('fee').value=$('channel').value;calc()};$('go').onclick=calc;calc();</script></body></html>
+<body>
+  <main class="page-shell">
+    <header class="hero">
+      <p class="eyebrow">OFICINA 3D · PRECIFICAÇÃO</p>
+      <h1>Quanto custa<br><span>cada peça?</span></h1>
+      <p class="subtitle">Calcule custo de produção, taxas de venda e lucro estimado antes de anunciar seu produto.</p>
+    </header>
+
+    <section class="calculator-card">
+      <div class="section-heading"><div><p class="eyebrow">01 · MATERIAL</p><h2>Filamento</h2></div></div>
+      <div class="fields">
+        <label>Preço do rolo (R$)<div class="input-wrap"><span>R$</span><input id="spoolPrice" type="number" min="0" step="0.01" value="95"></div></label>
+        <label>Peso líquido do rolo (g)<div class="input-wrap"><input id="spoolWeight" type="number" min="1" step="1" value="1000"><span>g</span></div></label>
+        <label>Filamento usado na peça (g)<div class="input-wrap"><input id="usedWeight" type="number" min="0" step="0.1" value="20"><span>g</span></div></label>
+        <label>Desperdício extra (%)<div class="input-wrap"><input id="wastePercent" type="number" min="0" max="300" step="0.5" value="5"><span>%</span></div><small>Purga, suportes e sobras não incluídos no fatiador.</small></label>
+      </div>
+      <div class="mini-result"><span>Custo estimado do filamento</span><strong id="filamentCost">R$ 2,00</strong><small id="filamentDetail">20 g · R$ 0,095/g</small></div>
+    </section>
+
+    <section class="calculator-card">
+      <div class="section-heading"><div><p class="eyebrow">02 · PRODUÇÃO</p><h2>Máquina, energia e trabalho</h2></div></div>
+      <div class="fields">
+        <label>Horas de impressão<div class="input-wrap"><input id="printHours" type="number" min="0" step="1" value="2"><span>h</span></div></label>
+        <label>Minutos adicionais<div class="input-wrap"><input id="printMinutes" type="number" min="0" max="59" step="1" value="0"><span>min</span></div></label>
+        <label>Consumo médio da impressora<div class="input-wrap"><input id="printerWatts" type="number" min="0" step="1" value="95"><span>W</span></div><small>Estimativa inicial; ideal medir com wattímetro.</small></label>
+        <label>Tarifa de energia<div class="input-wrap"><span>R$</span><input id="kwhPrice" type="number" min="0" step="0.001" value="0.85"></div><small>Use o custo por kWh da sua conta.</small></label>
+        <label>Preço de compra da impressora<div class="input-wrap"><span>R$</span><input id="printerPrice" type="number" min="0" step="0.01" value="2500"></div></label>
+        <label>Vida útil estimada<div class="input-wrap"><input id="printerLife" type="number" min="1" step="100" value="8000"><span>h</span></div><small>Estimativa para depreciação; ajuste conforme uso.</small></label>
+        <label>Manutenção e peças por hora<div class="input-wrap"><span>R$</span><input id="maintenanceHour" type="number" min="0" step="0.01" value="0.15"></div><small>Reserva para bico, mesa e desgaste.</small></label>
+        <label>Seu valor por hora de trabalho<div class="input-wrap"><span>R$</span><input id="laborHour" type="number" min="0" step="0.5" value="30"></div></label>
+        <label>Preparação + acabamento + embalagem<div class="input-wrap"><input id="laborMinutes" type="number" min="0" step="1" value="10"><span>min</span></div><small>Tempo humano ativo, não o tempo da impressora.</small></label>
+        <label>Taxa de falhas/reimpressão<div class="input-wrap"><input id="failurePercent" type="number" min="0" max="90" step="1" value="5"><span>%</span></div><small>Reserva sobre os custos de produção.</small></label>
+      </div>
+      <div class="breakdown">
+        <div><span>Filamento</span><b id="bFilament">R$ 0,00</b></div>
+        <div><span>Energia</span><b id="bEnergy">R$ 0,00</b></div>
+        <div><span>Depreciação da máquina</span><b id="bDepreciation">R$ 0,00</b></div>
+        <div><span>Manutenção</span><b id="bMaintenance">R$ 0,00</b></div>
+        <div><span>Mão de obra</span><b id="bLabor">R$ 0,00</b></div>
+        <div><span>Rateio de custos fixos</span><b id="bOverhead">R$ 0,00</b></div>
+        <div><span>Reserva para falhas</span><b id="bFailure">R$ 0,00</b></div>
+      </div>
+    </section>
+
+    <section class="calculator-card">
+      <div class="section-heading"><div><p class="eyebrow">03 · CUSTOS ADICIONAIS</p><h2>Embalagem e impostos</h2></div></div>
+      <div class="fields">
+        <label>Embalagem por unidade<div class="input-wrap"><span>R$</span><input id="packaging" type="number" min="0" step="0.01" value="1.5"></div></label>
+        <label>Outros custos por unidade<div class="input-wrap"><span>R$</span><input id="otherCosts" type="number" min="0" step="0.01" value="0"></div><small>Etiqueta, cola, ímã, chaveiro etc.</small></label>
+        <label>Impostos sobre a venda (%)<div class="input-wrap"><input id="taxPercent" type="number" min="0" max="99" step="0.1" value="0"><span>%</span></div><small>Informe a alíquota efetiva aplicável ao seu negócio; não é estimada automaticamente.</small></label>
+        <label>Frete/etiqueta pago por você<div class="input-wrap"><span>R$</span><input id="sellerShipping" type="number" min="0" step="0.01" value="0"></div></label>
+        <label>Custos fixos mensais do negócio<div class="input-wrap"><span>R$</span><input id="monthlyOverhead" type="number" min="0" step="0.01" value="0"></div><small>Ex.: DAS, internet, software, aluguel e outras despesas fixas.</small></label>
+        <label>Unidades vendidas por mês (estimativa)<div class="input-wrap"><input id="monthlyUnits" type="number" min="1" step="1" value="30"><span>un.</span></div><small>Usado para dividir os custos fixos por peça.</small></label>
+      </div>
+      <div class="mini-result"><span>Custo total antes das taxas de venda</span><strong id="baseCost">R$ 0,00</strong><small id="baseDetail">Produção + embalagem + outros custos + frete pago por você</small></div>
+    </section>
+
+    <section class="calculator-card sale-card">
+      <div class="section-heading"><div><p class="eyebrow">04 · PREÇO DE VENDA</p><h2>Simule cada canal</h2></div></div>
+      <div class="fields">
+        <label>Canal de venda<select id="channel">
+          <option value="shopee">Shopee — preset CNPJ (out/2026)</option>
+          <option value="mlClassic">Mercado Livre — Clássico (editar taxa)</option>
+          <option value="mlPremium">Mercado Livre — Premium (editar taxa)</option>
+          <option value="tiktok">TikTok Shop Brasil (jul/2026)</option>
+          <option value="direct">Venda direta / site próprio</option>
+          <option value="custom">Taxas personalizadas</option>
+        </select></label>
+        <label>Comissão percentual (%)<div class="input-wrap"><input id="commission" type="number" min="0" max="99" step="0.1" value="20"><span>%</span></div></label>
+        <label>Tarifa fixa por unidade (R$)<div class="input-wrap"><span>R$</span><input id="fixedFee" type="number" min="0" step="0.01" value="4.5"></div></label>
+        <label>Taxa adicional percentual (%)<div class="input-wrap"><input id="extraPercent" type="number" min="0" max="99" step="0.1" value="0"><span>%</span></div><small>Ex.: programa de frete, campanha ou afiliado. Evite duplicar cobranças.</small></label>
+        <label>Desconto dado por você (%)<div class="input-wrap"><input id="discountPercent" type="number" min="0" max="90" step="0.1" value="0"><span>%</span></div></label>
+        <label>Margem de lucro desejada (%)<div class="input-wrap"><input id="targetMargin" type="number" min="0" max="90" step="1" value="30"><span>%</span></div><small>Margem sobre o valor recebido após desconto, não markup sobre o custo.</small></label>
+      </div>
+      <p id="channelNote" class="notice">Preset baseado em tabela de referência. Confira as condições da sua conta e categoria antes de anunciar.</p>
+      <div class="sale-results">
+        <div class="metric"><span>Preço sugerido no anúncio</span><strong id="suggestedPrice">R$ 0,00</strong></div>
+        <div class="metric"><span>Preço pago após seu desconto</span><strong id="netSalePrice">R$ 0,00</strong></div>
+        <div class="metric"><span>Taxas + impostos estimados</span><strong id="feesTotal">R$ 0,00</strong></div>
+        <div class="metric"><span>Lucro estimado por unidade</span><strong id="profitValue">R$ 0,00</strong></div>
+        <div class="metric"><span>Margem real estimada</span><strong id="realMargin">0%</strong></div>
+        <div class="metric"><span>Receita após taxas e impostos</span><strong id="netReceived">R$ 0,00</strong></div>
+      </div>
+      <div id="warning" class="warning" role="status" hidden></div>
+      <div class="actions"><button id="recalculate" class="primary-button" type="button">Recalcular</button><button id="reset" class="secondary-button" type="button">Restaurar padrões</button></div>
+    </section>
+
+    <section class="calculator-card comparison-card">
+      <div class="section-heading"><div><p class="eyebrow">05 · COMPARAÇÃO</p><h2>Qual canal deixa mais lucro?</h2></div></div>
+      <p class="muted">Compara os presets de referência com a mesma meta de margem. Os canais com tarifas que dependem da categoria ou do anúncio exigem conferência no painel da plataforma.</p>
+      <div class="table-wrap"><table><thead><tr><th>Canal</th><th>Preço sugerido</th><th>Taxas estimadas</th><th>Lucro/un.</th></tr></thead><tbody id="comparisonBody"></tbody></table></div>
+    </section>
+
+    <footer class="tips">
+      <h2>Importante sobre as taxas</h2>
+      <p>As taxas pré-configuradas são referências editáveis, não uma integração em tempo real com os marketplaces. Shopee e TikTok Shop usam faixas de preço; o Mercado Livre depende da categoria, tipo de anúncio e logística. Consulte as fontes oficiais e os valores exibidos na sua conta antes de publicar.</p>
+      <p><a href="https://seller-br.tiktok.com/university/essay?course_type=1&from=search%7BcontentIdParams%7D&identity=1&knowledge_id=24428156307201&role=1" target="_blank" rel="noopener">Taxas oficiais do TikTok Shop</a> · <a href="https://developers.mercadolivre.com.br/pt_br/comissao-por-vender" target="_blank" rel="noopener">Custos por vender no Mercado Livre</a> · <a href="https://vendedores.mercadolivre.com.br/nota/como-usar-o-simulador-de-custos-do-mercado-livre" target="_blank" rel="noopener">Simulador do Mercado Livre</a> · <a href="https://help.shopee.com.br/portal" target="_blank" rel="noopener">Central de ajuda Shopee</a></p>
+      <p class="muted">Esta calculadora é uma estimativa para planejamento e não substitui a conferência das tarifas, regras fiscais ou condições comerciais aplicáveis ao seu caso.</p>
+    </footer>
+  </main>
+  <script src="script.js?v=24"></script>
+</body>
+</html>
